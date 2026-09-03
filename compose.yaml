@@ -1,25 +1,38 @@
 services:
   app:
-    image: node:22-alpine
-    command: sh -c "yarn install && yarn run dev"
+    image: node:22-alpine #Node.js 22 running on lightweight Alpine Linux
+    restart: unless-stopped #restart policy 
+    command: sh -c "yarn install && yarn run dev" #start container, install dependencies and start development server  #yarn is for Node.js projects 
     ports:
-      - 127.0.0.1:3000:3000
-    working_dir: /app
+      - 127.0.0.1:3000:3000 #connects a port on my computer to a port inside the container
+    working_dir: /app #inside the container, docker will treat /app as working directory
     volumes:
-      - ./:/app
+      - ./:/app #blind mount.....so connects my vs code project to the container 
     environment:
-      MYSQL_HOST: mysql
+      MYSQL_HOST: mysql #configuration values given to the application #find the container/service callsed mysql
       MYSQL_USER: root
       MYSQL_PASSWORD: secret
       MYSQL_DB: todos
+    healthcheck: #healthcheck for Node.js . It checks if the Node.js https server is responding 
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', res => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   mysql:
-    image: mysql:8.0
+    image: mysql:8.0 #create another container from MySQL 8.0 image 
+    restart: unless-stopped #restart policy
     volumes:
-      - todo-mysql-data:/var/lib/mysql
+      - todo-mysql-data:/var/lib/mysql #named Docker volume, stores MySQL's data outside the temporary container filesystem. even if MySQL container gets deleted, without persistent storage, database could disappear with it 
     environment:
       MYSQL_ROOT_PASSWORD: secret
       MYSQL_DATABASE: todos
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"] #checks if MySQL is responding 
+      interval: 10s #checks every 10s
+      timeout: 5s #give 5s to respons 
+      retries: 5  #allow upto 5 retries 
 
 volumes:
-  todo-mysql-data:
+  todo-mysql-data: #declares the named volume we used above 

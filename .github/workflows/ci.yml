@@ -1,0 +1,34 @@
+name: CI 
+
+on: #run the workflow when the code is pushed to main
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main] #also run it when someone creates a pull request targeting main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        # Downloads the repository's code to the temporary GitHub runner
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+        # Gives the temporary runner Node.js 22
+
+      - name: Enable Corepack
+        run: corepack enable
+        # Enables Yarn through Node.js Corepack
+
+      - name: Install dependencies
+        run: yarn install
+        # Installs the project's dependencies
+
+      - name: Run tests
+        run: yarn test
+        # Runs the project's test suite

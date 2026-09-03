@@ -8,7 +8,9 @@ const deleteItem = require('./routes/deleteItem');
 
 app.use(express.json());
 app.use(express.static(__dirname + '/static'));
-
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+}); // for the Node.js health check 
 app.get('/items', getItems);
 app.post('/items', addItem);
 app.put('/items/:id', updateItem);
