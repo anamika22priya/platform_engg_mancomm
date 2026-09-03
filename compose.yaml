@@ -1,8 +1,10 @@
 services:
   app:
-    image: node:22-alpine #Node.js 22 running on lightweight Alpine Linux
+    build: . #switch to non-root user 
+    # image: node:22-alpine #Node.js 22 running on lightweight Alpine Linux
     restart: unless-stopped #restart policy 
-    command: sh -c "yarn install && yarn run dev" #start container, install dependencies and start development server  #yarn is for Node.js projects 
+    command: node src/index.js #because dockerfile already has installed dependencies 
+    # command: sh -c "yarn install && yarn run dev" #start container, install dependencies and start development server  #yarn is for Node.js projects 
     ports:
       - 127.0.0.1:3000:3000 #connects a port on my computer to a port inside the container
     working_dir: /app #inside the container, docker will treat /app as working directory
@@ -10,9 +12,9 @@ services:
       - ./:/app #blind mount.....so connects my vs code project to the container 
     environment:
       MYSQL_HOST: mysql #configuration values given to the application #find the container/service callsed mysql
-      MYSQL_USER: root
-      MYSQL_PASSWORD: secret
-      MYSQL_DB: todos
+      MYSQL_USER: ${MYSQL_USER} #changed the password as .env variable 
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DB: ${MYSQL_DB}
     healthcheck: #healthcheck for Node.js . It checks if the Node.js https server is responding 
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', res => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 10s
@@ -26,8 +28,8 @@ services:
     volumes:
       - todo-mysql-data:/var/lib/mysql #named Docker volume, stores MySQL's data outside the temporary container filesystem. even if MySQL container gets deleted, without persistent storage, database could disappear with it 
     environment:
-      MYSQL_ROOT_PASSWORD: secret
-      MYSQL_DATABASE: todos
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DB}
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"] #checks if MySQL is responding 
       interval: 10s #checks every 10s
