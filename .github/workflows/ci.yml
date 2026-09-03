@@ -30,5 +30,7 @@ jobs:
         # Installs the project's dependencies
 
       - name: Run tests
+        env: 
+             SQLITE_DB_LOCATION: /tmp/todos/todo.db
         run: yarn test
         # Runs the project's test suite
